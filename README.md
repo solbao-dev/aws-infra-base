@@ -63,11 +63,11 @@ AWS 리소스는 `Project=b3-1` 태그와 생성 당시 기록한 리소스 ID�
 
 **Nginx는 브라우저의 HTTP 요청을 받아 웹페이지나 응답을 보내는 웹 서버 프로그램입니다.** `Welcome to nginx!`는 Nginx 설치 직후 제공되는 기본 페이지입니다.
 
-이번 실습에서는 [초기 설정 스크립트](infra/user-data.sh)가 `/usr/share/nginx/html/index.html`을 Hello Cloud 페이지로 교체했습니다. 따라서 Hello Cloud가 보이는 것은 Nginx가 우리가 설정한 HTML 파일을 정상적으로 제공하고 있음을 보여줍니다.
+이번 실습에서는 [초기 설정 스크립트](infra/user-data.sh)가 `/usr/share/nginx/html/index.html`을 Hello Cloud 페이지로 교체했습니다. 따라서 Hello Cloud가 보이는 것은 Nginx가 설정한 HTML 파일을 정상적으로 제공하고 있음을 보여줍니다.
 
 | 요청 경로 | Nginx의 응답 | 확인 목적 |
 | --- | --- | --- |
-| `/` | Hello Cloud HTML 페이지 | 사용자가 웹페이지를 볼 수 있는지 확인 |
+| `/` | Hello Cloud HTML 페이지 | 방문자가 웹페이지를 볼 수 있는지 확인 |
 | `/health` | HTTP 200과 고정 본문 `OK` | 서버가 요청에 정상 응답하는지 간단히 확인 |
 
 외부 요청에 `evidence=20261021T190713Z-a002c911`을 붙였습니다. [Nginx access log](evidence/server/20261021T192610Z-fecfd7c3/verification.log)에서 해당 요청의 `status=200`을 확인했습니다. 접속 사진은 별도로 `/health`의 OK 응답을 보여줍니다.
@@ -89,7 +89,7 @@ AWS 리소스는 `Project=b3-1` 태그와 생성 당시 기록한 리소스 ID�
 로컬은 Windows PowerShell, AWS CLI v2, OpenSSH를 사용합니다. 서버는 Amazon Linux 2023이며 SSH 로그인 이름은 `ec2-user`입니다. 이번 구축은 콘솔로 수행했고 `user-data.sh`는 첫 부팅 시 Nginx를 초기 설정하는 데 사용했습니다. 인프라 전체 자동 배포를 구현했다고 주장하지 않습니다.
 
 ```powershell
-# CLI 인증 후 실제 사용자 확인
+# CLI 인증 후 현재 호출자 확인
 aws sts get-caller-identity --profile b3-1-lab --region ap-northeast-2
 
 # 외부 HTTP 검증

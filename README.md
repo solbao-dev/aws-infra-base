@@ -2,15 +2,13 @@
 
 서울 리전의 VPC 안에 Public Subnet과 EC2/Nginx 웹 서버를 구성했습니다. HTTP는 공개하고 SSH는 운영자 IP로 제한했으며, 설정 확인·외부 응답·서버 access log로 동작을 확인했습니다.
 
-**이 프로젝트가 만드는 것:** 다른 사람도 접속할 수 있는 웹 서버와, 그 서버에 도달하는 네트워크·접근 제어 환경입니다.
 
-**현재 상태:** 배포 및 핵심 통신 확인. IAM 연결 정책·본문·그룹 소속 확인을 마쳤으며 주요 AWS 실습 자원의 삭제와 재조회를 마쳤습니다. 로컬 개인키 삭제와 Billing 사용자 확인(표시 내역 없음)도 마쳤습니다. 제출 규격·문서 링크·공개 전 민감정보 점검까지 완료했습니다.
 
-## 여기서 시작하세요
+## 0. 프로젝트 안내
 
 | 확인할 내용 | 바로 보기 |
 | --- | --- |
-| 서비스 구조와 용어 | [아키텍처](docs/images/architecture.png) · [설계 설명](docs/architecture-design.md) · [Glossary](docs/glossary.md) |
+| 서비스 구조와 용어 | [아키텍처](docs/architecture.png) · [설계 설명](docs/architecture-design.md) · [Glossary](docs/glossary.md) |
 | 외부에서 실제 응답하는가? | [접속 화면](docs/images/external-health.png) |
 | 서버 내부도 정상인가? | [서버 검증 로그](evidence/server/20261021T192610Z-fecfd7c3/verification.log) |
 | 오류를 어떻게 해결했는가? | [트러블슈팅 보고서 — IAM 조회 권한 누락 1건](docs/troubleshooting.md) |
@@ -18,7 +16,7 @@
 
 ## 1. 아키텍처와 요청 흐름
 
-![AWS 웹 서비스 아키텍처](docs/images/architecture.png)
+![AWS 웹 서비스 아키텍처](docs/architecture.png)
 
 다이어그램은 설계 설명용 v3입니다. 실제 배포 자원 ID는 [추적 기록](docs/cleanup-checklist.md)에 있습니다. EC2·EBS를 1개씩 사용한 단일 AZ 실습 구성입니다.
 
@@ -84,50 +82,9 @@ IGW는 VPC에 연결합니다. Route Table은 Subnet에 연결해 경로를 정�
 
 [서버 검증 로그](evidence/server/20261021T192610Z-fecfd7c3/verification.log)에는 Nginx 실행 상태·내부 HTTP 200·외부 통신 성공·외부 요청 처리 결과만 발췌했습니다. 전체 원본 로그가 아니며, 명령 표기는 실행 맥락을 설명하기 위해 추가했습니다. SSH 접속 후 확보한 출력이고 검증 시각은 2026-10-21 19:18:27 UTC입니다. UTC에 9시간을 더하면 한국 시간입니다.
 
-## 4. 평가 질문에 대한 설명
 
-IAM 정책은 EC2/VPC 작업을 열거하고 서울 리전 조건을 적용했으며, t2.micro·t3.micro 이외의 인스턴스 실행을 거부합니다. S3·RDS·IAM 관리 권한은 부여하지 않았습니다. 다만 `Resource: "*"`이므로 프로젝트별 자원 격리를 강제하지 않으며, 인스턴스 수·EBS 용량·SG 포트도 정책 자체가 제한하지는 않습니다.
 
-아래는 평가 기준에 맞춰 정리한 17개 질문과 답변입니다. 상황 대응 질문은 설계 설명이며 실제 확장·장애 실험을 수행했다는 뜻은 아닙니다.
-
-### 항목 1 · 실제 구성과 결과
-
-| 질문 | 답변과 근거 |
-| --- | --- |
-| 1. 네트워크가 구성됐는가? | VPC·Subnet·IGW를 만들고, Subnet에 연결된 Route Table의 기본 경로를 IGW로 설정했습니다. 구축 후 설정 확인 |
-| 2. SSH와 웹 서버가 동작하는가? | 개인키로 로그인했고 Nginx active와 내부 HTTP 200을 확인했습니다. [서버 결과](evidence/server/20261021T192610Z-fecfd7c3/verification.log) |
-| 3. 필요한 포트만 허용했는가? | 웹용 80만 전체 공개하고 관리용 22는 운영자 IP 하나로 제한했습니다. 구축 후 설정 확인 |
-| 4. 외부 접속이 검증됐는가? | 방식 B를 선택해 외부 /health의 200과 OK를 확인했습니다. [접속 화면](docs/images/external-health.png) |
-| 5. 최소 5종 자원이 정리됐는가? | **주요 자원 확인 완료.** EC2 terminated, EBS·IGW·VPC 삭제 및 EIP 없음 확인. 로컬 개인키 삭제와 Billing 사용자 확인도 마쳤습니다. [정리 기준](docs/cleanup-checklist.md) |
-
-### 항목 2 · 설계 선택
-
-| 질문 | 답변과 근거 |
-| --- | --- |
-| 6. 요청 흐름을 설명할 수 있는가? | 방문자가 퍼블릭 IP로 요청하면 IGW를 거쳐 SG가 허용한 EC2의 Nginx에 도달합니다. 응답은 Subnet 기본 경로와 같은 IGW를 사용합니다. [설계도](docs/images/architecture.png) |
-| 7. SG 최소화 기준은 무엇인가? | 실제 사용하는 HTTP·SSH만 열고 불필요한 DB 포트 등은 열지 않았습니다. SSH 허용 IP와 키 인증은 별도 조건입니다. |
-| 8. A/B 중 왜 B인가? | 고정된 상태 코드와 본문을 자동 검사하고 access log와 연결하기 쉽기 때문입니다. Nginx에 /health를 설정했습니다. [스크립트](infra/user-data.sh) |
-| 9. 자원을 어떻게 추적하는가? | Project=b3-1과 자원별 이름·실제 ID 목록을 대조합니다. 기본 자동 생성 자원도 기록합니다. [추적 기록](docs/cleanup-checklist.md) |
-
-### 항목 3 · 원리와 보안
-
-| 질문 | 답변과 근거 |
-| --- | --- |
-| 10. 기본 라우트는 왜 필요한가? | 더 구체적인 경로가 없는 외부 IPv4 목적지를 IGW로 보내기 위해 필요합니다. VPC 내부는 local 경로가 우선합니다. |
-| 11. SG와 IAM은 어떻게 다른가? | SG는 서버 통신 허용, IAM은 AWS API 작업 허용입니다. 각각 필요한 범위만 열어 불필요한 접근과 작업을 줄입니다. |
-| 12. SSH·DB 전체 공개의 대안은? | 공격 가능한 접근 범위를 줄이기 위해 SSH는 운영자 IP로 제한합니다. DB가 필요하다면 사설 Subnet에 두고 필요한 애플리케이션 SG에서만 접근하도록 설계합니다. DB는 이번에 만들지 않았습니다. |
-| 13. 가설 후 검증하는 이유는? | 여러 설정을 동시에 바꾸면 원인을 구분할 수 없습니다. 이번에는 오류 API와 정책을 대조한 뒤 Action 하나만 추가하고 동일 API를 재검증했습니다. [단일 트러블슈팅 사례](docs/troubleshooting.md) |
-
-### 항목 4 · 상황 대응
-
-| 질문 | 답변 |
-| --- | --- |
-| 14. 외부 접속이 안 되면? | 라우팅의 IGW 연결·기본 경로·Subnet 연결 → 실제 EC2 SG → 퍼블릭 IP/DNS → 프로세스·리스닝·서버 로그 순서로 확인합니다. 요청이 HTTP인지 HTTPS인지도 먼저 구분합니다. |
-| 15. IAM 권한이 부족하면? | 실제 호출자와 실패한 Action·Resource·조건을 확인하고 Allow 누락 또는 Deny 여부를 대조합니다. 필요한 범위만 수정하고 같은 사용자로 같은 API를 재실행합니다. |
-| 16. 서버를 2대로 늘리려면? | 단일 EC2의 CPU·메모리·응답시간을 측정해 병목을 확인합니다. ALB와 대상 그룹으로 요청을 분산하고, 고가용성이 필요하면 2개 AZ에 배치합니다. 자동 증설은 Auto Scaling을 검토하고 세션·파일의 서버 종속성도 확인합니다. 실제 추가 생성은 하지 않았습니다. |
-| 17. 예상치 못한 비용이 생기면? | Billing에서 서비스·리전·사용 유형을 확인하고 EC2·EBS·퍼블릭 IPv4/EIP부터 추적합니다. 생성했다면 NAT Gateway·ALB·스냅샷도 확인합니다. 실습 ID와 태그를 대조해 정리하고 잔여 자원을 재조회합니다. |
-
-## 5. 실행 환경과 확인 방법
+## 4. 실행 환경과 확인 방법
 
 로컬은 Windows PowerShell, AWS CLI v2, OpenSSH를 사용합니다. 서버는 Amazon Linux 2023이며 SSH 로그인 이름은 `ec2-user`입니다. 이번 구축은 콘솔로 수행했고 `user-data.sh`는 첫 부팅 시 Nginx를 초기 설정하는 데 사용했습니다. 인프라 전체 자동 배포를 구현했다고 주장하지 않습니다.
 
@@ -152,19 +109,13 @@ sudo grep -F 'evidence=20261021T190713Z-a002c911' /var/log/nginx/access.log
 ```
 
 
-## 6. 제출 전 남은 작업
+## 5. 트러블슈팅
 
-- [x] 서버 검증 결과를 제출용 발췌 로그로 정리
-- [x] 관리자 콘솔 증빙으로 b3-1-lab의 실제 정책·연결 정책 3개·그룹 없음 확인
-- [x] EC2 Name 태그 누락을 명시하고 실제 ID 기준 추적 방식을 문서에 유지
-- [x] 설계 다이어그램과 실제 구성 최종 대조
-- [x] [정리 체크리스트](docs/cleanup-checklist.md)에 주요 AWS 자원 삭제와 재조회 근거 기록
-- [x] 로컬 개인키 정리
-- [x] Billing 최종 확인 — 사용자가 확인한 화면에 내역 없음으로 보고
+EC2 생성 화면에서 기존 Security Group을 선택할 때 `ec2:GetSecurityGroupsForVpc` 권한 부족 오류가 발생했습니다. 생성 작업 권한은 있었지만, 콘솔이 선택한 Security Group을 확인하는 조회 권한이 정책에 빠져 있었기 때문입니다. `b3-1-lab`의 IAM 정책에 해당 Action을 추가하고 저장한 뒤 재시도하여 정상 진행을 확인했습니다.
 
-HTTPS·Docker는 선택 과제이며 현재 기본 제출 범위에 포함하지 않았습니다. 무료 혜택은 계정의 적용 조건을 확인하며 인스턴스 유형만으로 무과금을 보장하지 않습니다. 삭제해도 이미 발생한 비용은 남습니다.
+자세한 증상·가설·검증·조치·결과·재발 방지는 [트러블슈팅 보고서](docs/troubleshooting.md)에서 확인할 수 있습니다.
 
-## 7. 전체 프로젝트 구조
+## 6. 전체 프로젝트 구조
 
 ```text
 3-1/
@@ -177,7 +128,6 @@ HTTPS·Docker는 선택 과제이며 현재 기본 제출 범위에 포함하지
 │  ├─ cleanup-checklist.md           # 정리 대상과 완료 근거
 │  ├─ glossary.md                   # 용어 사전
 │  └─ images/
-│     ├─ architecture.png           # 설계도
 │     ├─ external-health.png        # 외부 접속 화면
 │     ├─ external-home.png          # 메인 페이지 보조 증빙
 │     ├─ troubleshooting-before.png # 오류 화면
@@ -189,10 +139,10 @@ HTTPS·Docker는 선택 과제이며 현재 기본 제출 범위에 포함하지
    └─ server/<실행ID>/verification.log # 서버 검증 로그 1개
 ```
 
-**제출 규격:** 과제에서 지정한 아키텍처 이미지 경로는 `docs/architecture.png`입니다. README 본문과 설계 설명은 관리가 쉬운 `docs/images/architecture.png`를 링크하며, 두 파일은 같은 이미지입니다. `README.md`와 접속 스크린샷, `docs/troubleshooting.md`, `docs/cleanup-checklist.md`도 유지합니다. 아키텍처 설명 MD와 Glossary도 함께 제공합니다. 증빙은 요구사항을 확인하는 핵심 자료만 남겼습니다.
+**제출 규격:** 아키텍처 이미지는 과제에서 지정한 `docs/architecture.png` 한 곳에만 둡니다. README와 설계 설명도 이 경로를 사용합니다. `README.md`와 접속 스크린샷, `docs/troubleshooting.md`, `docs/cleanup-checklist.md`도 유지합니다. 아키텍처 설명 MD와 Glossary도 함께 제공합니다. 증빙은 요구사항을 확인하는 핵심 자료만 남겼습니다.
 
 ## 파일 읽는 기준
 
 **이 README가 제출의 시작점**입니다. `docs`는 설명 문서, `infra`는 실제 설정 코드, `evidence`는 핵심 증빙입니다. 트러블슈팅 제출은 IAM 조회 권한 누락 **1건**입니다.
 
-서버 검증 로그는 실습 당시 결과이며 운영자 IP를 `[REDACTED_OPERATOR_IP]`로 가렸습니다. 계정 식별정보가 포함된 조회 JSON은 제출에서 제외하고 설정·검증 결과를 문서에 정리했습니다. 트러블슈팅의 오류·정책 수정 사진 2장은 `docs/images/`에 유지했습니다. 오류 사진은 메시지 영역만 잘라 계정 ID가 있는 주변 화면을 제외했습니다.
+서버 검증 로그는 실습 당시 결과이며 운영자 IP를 `[REDACTED_OPERATOR_IP]`로 가렸습니다. 계정 식별정보가 포함된 조회 JSON은 제출에서 제외하고 설정·검증 결과를 문서에 정리했습니다.

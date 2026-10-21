@@ -6,7 +6,7 @@
 
 > 방문자가 EC2라는 빌린 컴퓨터로 요청하면, IGW라는 인터넷 출입구를 지나 SG의 허용 규칙을 확인받고, Nginx가 웹 응답을 보낸다.
 
-아키텍처 이미지: [architecture.png](images/architecture.png) · 설계 설명: [architecture-design.md](architecture-design.md)
+아키텍처 이미지: [architecture.png](architecture.png) · 설계 설명: [architecture-design.md](architecture-design.md)
 
 ## 1. 그림의 네 가지 색
 

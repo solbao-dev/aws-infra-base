@@ -1,7 +1,7 @@
 # AWS 웹 서비스 인프라 아키텍처 
 
 
-![아키텍처](images/architecture.png)
+![아키텍처](architecture.png)
 
 서울 리전의 VPC 안에 Public Subnet과 EC2 웹 서버를 구성합니다. 인터넷 연결은 IGW와 기본 라우트로 제공하고, Security Group으로 HTTP와 SSH 접근 범위를 분리합니다. 리소스 관리에는 IAM 최소권한을 적용하며, AWS 조회 원본·HTTP 응답·서버 로그를 연결해 구성을 검증합니다.
 

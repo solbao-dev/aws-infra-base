@@ -1,0 +1,21 @@
+# 제출용 검증 출력 발췌 
+# SSH 접속 후 서버에서 실행한 결과. 명령 표기는 실행 맥락을 설명하기 위해 추가.
+
+=== 검증 시각 (UTC) ===
+2026-10-21T19:18:27+00:00
+
+=== Nginx 실행 상태 ===
+# 명령: systemctl is-active nginx
+active
+
+=== 서버 내부 HTTP 응답 ===
+# 대상: curl http://localhost/
+HTTP/1.1 200 OK
+
+=== 서버의 인터넷 아웃바운드 통신 ===
+# 대상: curl https://example.com
+HTTP 200
+curl 종료 코드: 0
+
+=== 외부 /health 요청 처리 (앞선 요청의 access log 발췌) ===
+2026-10-21T19:08:40+00:00 client=[REDACTED_OPERATOR_IP] request="GET /health?evidence=20261021T190713Z-a002c911 HTTP/1.1" status=200 bytes=3 duration=0.000

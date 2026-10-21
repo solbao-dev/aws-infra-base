@@ -43,9 +43,9 @@ IGW는 VPC에 연결합니다. Route Table은 Subnet에 연결해 경로를 정�
 | Nginx | `/` 웹페이지, `/health`는 200과 `OK` |
 | IAM | 실습용 IAM 사용자 `b3-1-lab`; 서울 리전 작업, EC2 유형 제한 |
 
-관리자 콘솔의 연결 정책 목록에서 B3-1-Seoul-Lab·IAMUserChangePassword·SignInLocalDevelopmentAccess 3개와 관리자 정책이 목록에 없음을 확인했습니다. 사용자가 콘솔에서 복사한 적용 정책과 [정책 코드](infra/iam-policy.json)의 내용이 일치함을 확인했습니다. 그룹 소속 화면에서 소속 그룹이 없음을 확인했습니다. `Resource: "*"`인 작업이 있어 실습 태그만으로 권한이 격리되는 정책은 아닙니다.
+`b3-1-lab`에는 실습에 필요한 EC2/VPC 정책과 기본 로그인 정책만 연결했습니다. 관리자 권한은 부여하지 않았으며, 연결된 정책 본문은 [IAM 정책 코드](infra/iam-policy.json)와 일치합니다. 그룹에는 소속되지 않은 독립 IAM 사용자입니다.
 
-실제 EC2에는 현재 `Name` 태그가 없고 `Project=b3-1`만 있습니다. 이름 검색 대신 기록한 ID로 추적합니다. 실습 자원에 붙인 프로젝트 태그와 ID를 함께 사용하고 기존 공모전 자원은 정리 대상에서 제외합니다.
+AWS 리소스는 `Project=b3-1` 태그와 생성 당시 기록한 리소스 ID를 기준으로 추적했습니다.
 
 ## 3. 외부 접속 검증 — 방식 B
 

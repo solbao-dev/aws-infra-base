@@ -1,19 +1,9 @@
 # OS metadata
 .DS_Store
-._*
 Thumbs.db
 Desktop.ini
 
-# Python caches and environments
-__pycache__/
-*.py[cod]
-.pytest_cache/
-.mypy_cache/
-.ruff_cache/
-.venv/
-venv/
-
-# Local credentials and private keys
+# Local AWS credentials, environment files, and private keys
 .aws/
 .ssh/
 .env
@@ -24,30 +14,10 @@ venv/
 *.key
 *.p12
 *.pfx
-credentials
-credentials.csv
-*_credentials.csv
+credentials*
 *accessKeys*.csv
-id_rsa
-id_rsa.*
-id_ed25519
-id_ed25519.*
-
-# Local editor / agent state and temporary downloads
-.vscode/
-.idea/
-.codex/
-.local/
-tmp/
-temp/
-*.tmp
-*.bak
-*.swp
-*.msi
-*.exe
-
-# Submission evidence is intentional: retain JSON, logs and screenshots.
-# Do not ignore evidence/, *.log, *.json or *.png.
+id_rsa*
+id_ed25519*
 
 # Assignment source documents: local only, never include in Git
 /assignments/
